@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Take-Off GPS Field Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --bg:#f3f0ec;--surface:#fff;--surface2:#faf8f5;--ink:#231f20;--ink2:#5b5552;--line:#ddd6cf;
+  --red:#aa323b;--red-ink:#fff;--red-soft:#f6e6e7;
+  --ok:#2b7549;--ok-soft:#e2f0e7;--gps:#2a5c9c;--gps-soft:#e1eaf6;--warn:#9a5f08;--warn-soft:#f7ebd4;--bad:#b0241c;--bad-soft:#f7dfdc;
+  --plot:#eef0e8;--grid:#d9dccf;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171415;--surface:#231f20;--surface2:#2b2627;--ink:#f2eeea;--ink2:#b8b0aa;--line:#403a3b;
+  --red:#d8545d;--red-soft:#3a2224;--ok:#6cc08a;--ok-soft:#1d3226;--gps:#7fb0ea;--gps-soft:#1c2c42;--warn:#e3a94f;--warn-soft:#3a2e17;--bad:#f08a82;--bad-soft:#40201e;
+  --plot:#2a2e26;--grid:#3d4237;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171415;--surface:#231f20;--surface2:#2b2627;--ink:#f2eeea;--ink2:#b8b0aa;--line:#403a3b;
+  --red:#d8545d;--red-soft:#3a2224;--ok:#6cc08a;--ok-soft:#1d3226;--gps:#7fb0ea;--gps-soft:#1c2c42;--warn:#e3a94f;--warn-soft:#3a2e17;--bad:#f08a82;--bad-soft:#40201e;
+  --plot:#2a2e26;--grid:#3d4237;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);padding-bottom:110px}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:42px;width:100%}
+:focus-visible{outline:3px solid var(--gps);outline-offset:2px}
+header{background:var(--red);color:var(--red-ink);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px}
+header b{display:block;font-size:16px;font-weight:700}header span{font-size:12px;opacity:.92}
+.wrap{max-width:920px;margin:0 auto;padding:12px 16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 2px}.card h3{font-size:13px;margin:12px 0 6px;color:var(--ink2);font-weight:600}
+.sub{color:var(--ink2);font-size:13px;margin:0 0 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 16px;min-height:46px;font-weight:600}
+.btn.pri{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.btn.sm{min-height:38px;padding:6px 12px;font-size:13px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.chip{border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:7px 13px;min-height:38px;font-size:13px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}.tag.gps{background:var(--gps-soft);color:var(--gps)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.bad{background:var(--bad-soft);color:var(--bad)}.tag.off{background:var(--surface2);color:var(--ink2);border:1px solid var(--line)}
+.banner{border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+.banner.warn{background:var(--warn-soft)}.banner.bad{background:var(--bad-soft)}.banner.info{background:var(--gps-soft)}.banner.ok{background:var(--ok-soft)}
+.big{font-size:34px;font-weight:700;line-height:1.1}
+.mono{font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.stat{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px}
+.stat .k{font-size:12px;color:var(--ink2)}.stat .v{font-size:20px;font-weight:700}
+.tabs{display:flex;gap:6px;margin-bottom:12px}.tabs .chip{flex:1;min-height:44px;font-size:14px}
+svg{width:100%;height:auto;display:block;border-radius:10px;background:var(--plot);touch-action:manipulation}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{color:var(--ink2);font-weight:600;font-size:12px}
+td.n,th.n{text-align:right}
+.edges{overflow-x:auto}
+.edges input{width:84px;min-height:38px;padding:4px 8px;text-align:right}
+.pt{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface2);margin-bottom:6px}
+.pt img{width:48px;height:48px;object-fit:cover;border-radius:6px}
+.pt .nm{flex:1;min-width:0}.pt small{color:var(--ink2);display:block;font-size:12px;word-break:break-word}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:center;justify-content:center}
+.bar .inner{display:flex;gap:8px;width:100%;max-width:920px}
+.corner{flex:1;min-height:60px;font-size:19px;border-radius:14px;background:var(--red);color:var(--red-ink);border:0;font-weight:700}
+.corner[disabled]{opacity:.65}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:6px}
+.dotk{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+@keyframes pulse{0%{opacity:.9}100%{opacity:.25}}
+.live{animation:pulse 1.2s ease-in-out infinite alternate}
+@media (prefers-reduced-motion:reduce){.live{animation:none}}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><b>Take-Off GPS Field Test</b><span>North American Roofing · checks what the phone or tablet GPS really delivers</span></header>
+<div class="wrap">
+  <div id="secure" class="banner bad" hidden><b>GPS needs a secure web address.</b> Open this page from an https address, not from a file on the device.</div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><div class="sub" style="margin:0">GPS accuracy right now</div><div class="big mono" id="acc">--</div><div class="sub" id="fixinfo" style="margin:4px 0 0">GPS is off.</div></div>
+      <div style="text-align:right"><span class="tag off" id="pill">Off</span><div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn sm pri" id="gpsbtn">Start GPS</button></div></div>
+    </div>
+    <h3>Average each corner over</h3>
+    <div class="row" id="avgchips"></div>
+    <h3>Ignore fixes worse than</h3>
+    <div class="row" id="gatechips"></div>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs">
+    <button class="chip on" data-tab="walk" role="tab">Walk</button>
+    <button class="chip" data-tab="still" role="tab">Stand still</button>
+    <button class="chip" data-tab="results" role="tab">Results</button>
+  </div>
+
+  <section id="tab-walk">
+    <div class="card" id="howto">
+      <h2>Backyard test</h2>
+      <p class="sub">Pick something you can tape: a deck, shed, fence line, or a rectangle marked with stakes. Start GPS, stand at a corner, press Corner, walk to the next, and repeat. Press Close shape back at the first corner. Then tape each side and type the readings into the table.</p>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2>Outline (north is up)</h2><span class="tag off" id="areatag" hidden></span></div>
+      <div id="plot"></div>
+      <div class="legend"><span><i class="dotk" style="background:var(--gps)"></i>You, with GPS accuracy circle</span><span><i class="dotk" style="background:var(--red)"></i>Corners you marked</span></div>
+    </div>
+    <div class="card">
+      <h2>Corners</h2><p class="sub">Each corner is an average of fixes. The spread shows how much the fixes wandered while you stood there.</p>
+      <div id="pts"><p class="sub">No corners yet.</p></div>
+    </div>
+    <div class="card">
+      <h2>Edges and tape check</h2>
+      <p class="sub">Type your tape reading for each side. The app scales the whole drawing to your longest taped side, then shows how far the others are off. Anything more than 1 ft off is flagged.</p>
+      <div class="edges" id="edges"><p class="sub">Mark at least two corners.</p></div>
+      <div id="scalenote" class="sub" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section id="tab-still" hidden>
+    <div class="card">
+      <h2>Stand-still test</h2>
+      <p class="sub">Stand in one spot and do not move. The app records every fix for 30 seconds. A perfect GPS would show one dot. The scatter shows how far a fixed spot appears to wander.</p>
+      <div class="row"><button class="btn pri" id="stillbtn">Start 30 second test</button><span id="stillstat" class="sub" style="margin:0"></span></div>
+    </div>
+    <div class="card"><div id="stillplot"></div><div class="legend"><span><i class="dotk" style="background:var(--gps)"></i>Each fix</span><span><i class="dotk" style="background:var(--red)"></i>Average</span><span>Rings every 5 ft</span></div></div>
+    <div class="card"><div class="grid" id="stillstats"></div></div>
+  </section>
+
+  <section id="tab-results" hidden>
+    <div class="card"><h2>Summary</h2><div class="grid" id="sumgrid"></div><p class="sub" id="sumnote" style="margin-top:10px"></p></div>
+    <div class="card">
+      <h2>Save this test</h2>
+      <p class="sub">Send the file to Matt so the numbers can be analyzed. Photos stay on the device; their names are in the file.</p>
+      <div class="row"><button class="btn pri" id="dl">Download results</button><button class="btn" id="cp">Copy results</button><span id="cpmsg" class="sub" style="margin:0"></span></div>
+      <h3>Start over</h3>
+      <div class="row"><button class="btn" id="reset">Clear this test</button><span id="resetmsg" class="sub" style="margin:0"></span></div>
+    </div>
+  </section>
+</div>
+
+<div class="bar" id="bar"><div class="inner">
+  <button class="btn" id="undo">Undo</button>
+  <button class="corner" id="corner">Corner</button>
+  <button class="btn" id="close">Close shape</button>
+</div></div>
+<input type="file" id="cam" accept="image/*" capture="environment" hidden>
+
+<script>
+(function(){
+'use strict';
+var FT=3.28084,R=6378137;
+var KEY='nar-gps-field-test-v1';
+var S={pts:[],closed:false,closure:null,tape:{},still:null,avg:2,gate:30,photoN:0,tab:'walk'};
+var live=null,watchId=null,wake=null,busy=false,stillBusy=false,collectors=[],photoFor=null,thumbs={};
+var $=function(s){return document.querySelector(s)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function load(){try{var j=localStorage.getItem(KEY);if(j){var o=JSON.parse(j);['pts','closed','closure','tape','still','avg','gate','photoN'].forEach(function(k){if(o[k]!==undefined)S[k]=o[k]});S.pts.forEach(function(p){p.photo=p.photoName?{name:p.photoName}:null})}}catch(e){}}
+function save(){try{var o=JSON.parse(JSON.stringify(S));o.pts.forEach(function(p){p.photoName=p.photo&&p.photo.name||null;delete p.photo});localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+
+/* ---------- geometry (feet, local flat plane around the first corner) ---------- */
+function toXY(p,o){var dx=(p.lon-o.lon)*Math.PI/180*R*Math.cos(o.lat*Math.PI/180);var dy=(p.lat-o.lat)*Math.PI/180*R;return [dx*FT,dy*FT]}
+function distFt(a,b){var v=toXY(a,b);return Math.hypot(v[0],v[1])}
+function geometry(){
+  var n=S.pts.length,o=S.pts[0],xy=[],edges=[],i;
+  if(!n)return{xy:[],edges:[],f:1,fromEdge:null,area:null};
+  xy=S.pts.map(function(p){return toXY(p,o)});
+  for(i=0;i<n-1;i++)edges.push([i,i+1]);
+  if(S.closed&&n>=3)edges.push([n-1,0]);
+  edges.forEach(function(e){e.raw=Math.hypot(xy[e[1]][0]-xy[e[0]][0],xy[e[1]][1]-xy[e[0]][1])});
+  var f=1,fromEdge=null,best=-1;
+  edges.forEach(function(e,k){var t=parseFloat(S.tape[k]);if(t>0&&e.raw>best&&e.raw>0.5){best=e.raw;f=t/e.raw;fromEdge=k}});
+  var sxy=xy.map(function(p){return [p[0]*f,p[1]*f]});
+  var area=null;
+  if(S.closed&&n>=3){var a=0;for(i=0;i<n;i++){var j=(i+1)%n;a+=sxy[i][0]*sxy[j][1]-sxy[j][0]*sxy[i][1]}area=Math.abs(a)/2}
+  return{xy:sxy,edges:edges,f:f,fromEdge:fromEdge,area:area}
+}
+
+/* ---------- GPS ---------- */
+function setPill(t,c){var p=$('#pill');p.textContent=t;p.className='tag '+c}
+function accFt(a){return a*FT}
+function renderStatus(){
+  var a=$('#acc'),fi=$('#fixinfo');
+  if(watchId==null){a.textContent='--';fi.textContent='GPS is off.';setPill('Off','off');$('#gpsbtn').textContent='Start GPS';return}
+  $('#gpsbtn').textContent='Stop GPS';
+  if(!live){a.textContent='--';fi.textContent='Waiting for the first fix. Stay outside with a clear view of the sky.';setPill('Searching','warn');return}
+  var f=accFt(live.acc);a.textContent='±'+Math.round(f)+' ft';
+  var age=(Date.now()-live.ts)/1000;
+  fi.textContent=live.lat.toFixed(6)+', '+live.lon.toFixed(6)+' · fix '+(age<1.5?'now':age.toFixed(0)+' s ago');
+  setPill(f<=15?'Good':f<=33?'Fair':'Poor',f<=15?'ok':f<=33?'warn':'bad');
+}
+function onFix(pos){
+  var c=pos.coords;live={lat:c.latitude,lon:c.longitude,acc:c.accuracy||50,ts:Date.now(),alt:c.altitude};
+  collectors.forEach(function(k){k(live)});
+  renderStatus();renderPlot();
+}
+function onErr(e){
+  var m={1:'Location permission was denied. Allow location for this site in your browser settings, then press Start GPS.',2:'The device could not get a position. Try moving into the open.',3:'Waiting for GPS took too long. Keep the page open and try again.'}[e.code]||'GPS error.';
+  $('#fixinfo').textContent=m;if(e.code===1){stopGPS();$('#fixinfo').textContent=m;setPill('Denied','bad')}
+}
+function startGPS(){
+  if(!navigator.geolocation){$('#fixinfo').textContent='This browser has no GPS support.';setPill('No GPS','bad');return}
+  watchId=navigator.geolocation.watchPosition(onFix,onErr,{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+  try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(function(w){wake=w}).catch(function(){})}catch(e){}
+  renderStatus();
+}
+function stopGPS(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null;live=null;try{if(wake)wake.release()}catch(e){}wake=null;renderStatus();renderPlot()}
+
+/* average several fixes into one corner */
+function collect(ms,gateM,onProg){
+  return new Promise(function(resolve){
+    var samples=[],rej=0,t0=Date.now(),maxWait=Math.max(ms+6000,8000),done=false;
+    function finish(){
+      if(done)return;done=true;
+      var i=collectors.indexOf(fn);if(i>-1)collectors.splice(i,1);clearInterval(tm);
+      if(!samples.length)return resolve(null);
+      var w=0,lat=0,lon=0;samples.forEach(function(s){var q=1/Math.pow(Math.max(s.acc,3),2);w+=q;lat+=s.lat*q;lon+=s.lon*q});
+      var m={lat:lat/w,lon:lon/w},sum=0,accs=0;
+      samples.forEach(function(s){var d=distFt(s,m)/FT;sum+=d*d;accs+=s.acc});
+      resolve({lat:m.lat,lon:m.lon,acc:accs/samples.length,n:samples.length,rejected:rej,spread:Math.sqrt(sum/samples.length),t:new Date().toISOString()});
+    }
+    function fn(f){if(gateM&&f.acc>gateM){rej++;return}samples.push({lat:f.lat,lon:f.lon,acc:f.acc})}
+    if(live)fn(live);
+    collectors.push(fn);
+    var tm=setInterval(function(){
+      var el=Date.now()-t0;if(onProg)onProg(el,samples.length,rej);
+      if((el>=ms&&samples.length>=2)||el>=maxWait)finish();
+    },150);
+  });
+}
+function gateM(){return S.gate?S.gate/FT:0}
+
+/* ---------- actions ---------- */
+function needGPS(){if(watchId==null){startGPS()}if(!live){$('#fixinfo').textContent='Waiting for the first fix. Press Corner again in a moment.';return false}return true}
+function btnLabel(t){$('#corner').textContent=t}
+function setBusy(b){busy=b;$('#corner').disabled=b;$('#close').disabled=b;$('#undo').disabled=b}
+function markCorner(){
+  if(busy)return;
+  if(S.closed){$('#fixinfo').textContent='The shape is closed. Press Undo to reopen it.';return}
+  if(!needGPS())return;
+  setBusy(true);
+  collect(S.avg*1000,gateM(),function(el,n,rej){btnLabel('Fixing… '+(el/1000).toFixed(1)+' s ('+n+' fixes)')}).then(function(r){
+    setBusy(false);
+    if(!r){btnLabel('No good fix, try again');setTimeout(updBar,1800);return}
+    r.id=S.pts.length+1;r.photo=null;S.pts.push(r);save();renderAll();updBar();
+  });
+}
+function closeShape(){
+  if(busy)return;
+  if(S.pts.length<3){$('#fixinfo').textContent='Mark at least 3 corners before closing the shape.';return}
+  if(S.closed)return;
+  if(!needGPS())return;
+  setBusy(true);
+  collect(S.avg*1000,gateM(),function(el,n){btnLabel('Fixing… '+(el/1000).toFixed(1)+' s')}).then(function(r){
+    setBusy(false);
+    if(!r){btnLabel('No good fix, try again');setTimeout(updBar,1800);return}
+    S.closed=true;S.closure={ft:distFt(r,S.pts[0]),acc:r.acc,n:r.n};save();renderAll();updBar();
+  });
+}
+function undo(){if(busy)return;if(S.closed){S.closed=false;S.closure=null;S.tape={}}else if(S.pts.length){S.pts.pop();S.tape={}}save();renderAll();updBar()}
+function updBar(){
+  btnLabel(S.closed?'Shape closed':'Corner '+(S.pts.length+1));
+  $('#close').disabled=S.closed||S.pts.length<3;
+  $('#undo').disabled=!S.pts.length&&!S.closed;
+  $('#corner').disabled=S.closed;
+  $('#bar').hidden=S.tab!=='walk';
+}
+
+/* ---------- plots ---------- */
+function plotSVG(items,span,cx,cy,live_){
+  /* items: array of svg-building callbacks in feet; builds viewBox around center with given span */
+  var half=span/2,w=span,h=span*0.78;var x0=cx-half,y0=cy-h/2;
+  var s='<svg viewBox="'+x0+' '+(-(y0+h))+' '+w+' '+h+'" role="img" aria-label="Plot in feet">';
+  var step=span>120?20:span>50?10:5;
+  var gx=Math.ceil(x0/step)*step,gy=Math.ceil(y0/step)*step;
+  for(var x=gx;x<=x0+w;x+=step)s+='<line x1="'+x+'" y1="'+(-(y0+h))+'" x2="'+x+'" y2="'+(-y0)+'" stroke="var(--grid)" stroke-width="'+(span/600)+'"/>';
+  for(var y=gy;y<=y0+h;y+=step)s+='<line x1="'+x0+'" y1="'+(-y)+'" x2="'+(x0+w)+'" y2="'+(-y)+'" stroke="var(--grid)" stroke-width="'+(span/600)+'"/>';
+  s+='<text x="'+(x0+w-span*.015)+'" y="'+(-(y0+h)+span*.045)+'" text-anchor="end" font-size="'+(span*.035)+'" fill="var(--ink2)">grid '+step+' ft · N ↑</text>';
+  return s+items+'</svg>';
+}
+function renderPlot(){
+  var g=geometry(),n=S.pts.length,o=S.pts[0]||live,items='',fs,i;
+  var pts=g.xy.slice();
+  var lv=null;if(live&&o){var v=toXY(live,o);lv=[v[0]*g.f,v[1]*g.f];}
+  var all=pts.concat(lv?[lv]:[]);
+  if(!all.length){$('#plot').innerHTML=plotSVG('',60,0,0);return}
+  var minx=Math.min.apply(null,all.map(function(p){return p[0]})),maxx=Math.max.apply(null,all.map(function(p){return p[0]}));
+  var miny=Math.min.apply(null,all.map(function(p){return p[1]})),maxy=Math.max.apply(null,all.map(function(p){return p[1]}));
+  var spanx=maxx-minx,spany=(maxy-miny)/0.78;var span=Math.max(40,Math.max(spanx,spany)*1.3);
+  var cx=(minx+maxx)/2,cy=(miny+maxy)/2;fs=span*0.04;
+  var P=function(p){return p[0]+','+(-p[1])};
+  g.edges.forEach(function(e,k){
+    var a=g.xy[e[0]],b=g.xy[e[1]];items+='<line x1="'+a[0]+'" y1="'+(-a[1])+'" x2="'+b[0]+'" y2="'+(-b[1])+'" stroke="var(--red)" stroke-width="'+(span*.008)+'" stroke-linecap="round"/>';
+    var len=Math.round(Math.hypot(b[0]-a[0],b[1]-a[1]));var mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+    var dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=dy/L,ny=-dx/L;
+    items+='<text x="'+(mx+nx*fs*1.5)+'" y="'+(-(my+ny*fs*1.5)+fs*.35)+'" text-anchor="middle" font-size="'+fs+'" font-weight="700" fill="var(--gps)">'+len+"'</text>";
+  });
+  g.xy.forEach(function(p,i){items+='<circle cx="'+p[0]+'" cy="'+(-p[1])+'" r="'+(span*.016)+'" fill="var(--surface)" stroke="var(--red)" stroke-width="'+(span*.005)+'"/><text x="'+p[0]+'" y="'+(-p[1]+fs*.35)+'" text-anchor="middle" font-size="'+fs*.9+'" font-weight="700" fill="var(--ink)">'+(i+1)+'</text>'});
+  if(lv){var r=live.acc*FT*g.f;items+='<circle cx="'+lv[0]+'" cy="'+(-lv[1])+'" r="'+r+'" fill="var(--gps)" fill-opacity=".12" stroke="var(--gps)" stroke-opacity=".5" stroke-width="'+(span*.003)+'"/><circle class="live" cx="'+lv[0]+'" cy="'+(-lv[1])+'" r="'+(span*.011)+'" fill="var(--gps)"/>'}
+  $('#plot').innerHTML=plotSVG(items,span,cx,cy);
+  var at=$('#areatag');if(g.area!=null){at.hidden=false;at.className='tag ok';at.textContent=Math.round(g.area).toLocaleString()+' SF'+(g.fromEdge!=null?' (scaled to tape)':' (GPS only)')}else at.hidden=true;
+}
+
+/* ---------- lists ---------- */
+function renderPts(){
+  var h='';
+  if(!S.pts.length){$('#pts').innerHTML='<p class="sub">No corners yet.</p>';$('#howto').hidden=false;return}
+  $('#howto').hidden=S.pts.length>0;
+  S.pts.forEach(function(p,i){
+    var prev=i?Math.round(distFt(p,S.pts[i-1]))+' ft from corner '+i+' · ':'';
+    var th=thumbs[p.id]?'<img alt="Photo of corner '+(i+1)+'" src="'+thumbs[p.id]+'">':'';
+    h+='<div class="pt"><b>'+(i+1)+'</b><div class="nm"><div>'+prev+'±'+Math.round(accFt(p.acc))+' ft reported</div><small>'+p.n+' fixes averaged · wandered ±'+Math.round(p.spread*FT)+' ft'+(p.rejected?' · '+p.rejected+' poor fixes skipped':'')+'</small>'+(p.photo?'<small>'+esc(p.photo.name)+'</small>':'')+'</div>'+th+'<button class="btn sm" data-photo="'+i+'">'+(p.photo?'Retake':'Photo')+'</button></div>';
+  });
+  $('#pts').innerHTML=h;
+}
+function renderEdges(){
+  var g=geometry();
+  if(g.edges.length<1){$('#edges').innerHTML='<p class="sub">Mark at least two corners.</p>';$('#scalenote').textContent='';return}
+  var h='<table><thead><tr><th>Edge</th><th class="n">GPS</th><th class="n">Scaled</th><th class="n">Tape</th><th class="n">Off by</th></tr></thead><tbody>';
+  g.edges.forEach(function(e,k){
+    var a=e[0]+1,b=e[1]+1;
+    h+='<tr><td>'+a+' → '+b+'</td><td class="n mono" id="eg'+k+'"></td><td class="n mono" id="es'+k+'"></td><td class="n"><input type="number" inputmode="decimal" step="1" min="0" aria-label="Tape reading for edge '+a+' to '+b+' in feet" data-tape="'+k+'" value="'+esc(S.tape[k]==null?'':S.tape[k])+'"></td><td class="n mono" id="ed'+k+'"></td></tr>';
+  });
+  $('#edges').innerHTML=h+'</tbody></table>';
+  paintEdges();
+}
+function paintEdges(){
+  var g=geometry();
+  g.edges.forEach(function(e,k){
+    var raw=Math.round(e.raw),sc=Math.round(e.raw*g.f),t=parseFloat(S.tape[k]);
+    var a=$('#eg'+k),b=$('#es'+k),d=$('#ed'+k);if(!a)return;
+    a.textContent=raw+"'";b.textContent=g.fromEdge!=null?sc+"'":'-';
+    if(t>0){var diff=sc-t;var c=Math.abs(diff)<=1?'ok':Math.abs(diff)<=3?'warn':'bad';d.innerHTML='<span class="tag '+c+'">'+(diff>0?'+':'')+Math.round(diff*10)/10+' ft</span>'}else d.textContent='-';
+  });
+  var note='';
+  if(g.fromEdge!=null){var ee=g.edges[g.fromEdge];note='Drawing scaled by '+g.f.toFixed(2)+' to match your tape on edge '+(ee[0]+1)+' → '+(ee[1]+1)+' (the longest taped edge).'}
+  if(S.closure)note+=(note?' ':'')+'Closure error: you ended '+Math.round(S.closure.ft)+' ft from where you started.';
+  $('#scalenote').textContent=note;
+  renderPlot();
+}
+function renderAll(){renderPts();renderEdges();renderPlot();renderResults()}
+
+/* ---------- still test ---------- */
+function runStill(){
+  if(stillBusy)return;if(!needGPS())return;
+  stillBusy=true;var fixes=[],t0=Date.now(),btn=$('#stillbtn');btn.disabled=true;
+  var fn=function(f){fixes.push({lat:f.lat,lon:f.lon,acc:f.acc})};if(live)fn(live);collectors.push(fn);
+  var tm=setInterval(function(){
+    var el=Date.now()-t0;btn.textContent='Recording… '+Math.ceil((30000-el)/1000)+' s';$('#stillstat').textContent=fixes.length+' fixes';
+    if(el>=30000){clearInterval(tm);var i=collectors.indexOf(fn);if(i>-1)collectors.splice(i,1);stillBusy=false;btn.disabled=false;btn.textContent='Run it again';finishStill(fixes)}
+  },250);
+}
+function finishStill(fx){
+  if(fx.length<2){$('#stillstat').textContent='Not enough fixes came in. Check that GPS is on and try again.';return}
+  var lat=0,lon=0;fx.forEach(function(f){lat+=f.lat;lon+=f.lon});var m={lat:lat/fx.length,lon:lon/fx.length};
+  var d=fx.map(function(f){return distFt(f,m)}).sort(function(a,b){return a-b});
+  var rms=Math.sqrt(d.reduce(function(s,x){return s+x*x},0)/d.length);
+  var acc=fx.reduce(function(s,f){return s+f.acc},0)/fx.length*FT;
+  S.still={n:fx.length,maxFt:d[d.length-1],rmsFt:rms,p95Ft:d[Math.min(d.length-1,Math.floor(d.length*.95))],meanAccFt:acc,
+    pts:fx.map(function(f){var v=toXY(f,m);return [v[0],v[1]]}),t:new Date().toISOString()};
+  save();renderStill();renderResults();
+}
+function renderStill(){
+  var s=S.still;
+  if(!s){$('#stillplot').innerHTML=plotSVG('',30,0,0);$('#stillstats').innerHTML='<p class="sub" style="margin:0">No test run yet.</p>';return}
+  var span=Math.max(20,s.maxFt*2.6),items='',fs=span*.035;
+  [5,10,15,20,30,40].forEach(function(r){if(r<span/2)items+='<circle cx="0" cy="0" r="'+r+'" fill="none" stroke="var(--ink2)" stroke-opacity=".35" stroke-width="'+(span*.003)+'"/><text x="'+r+'" y="'+(fs)+'" font-size="'+fs+'" fill="var(--ink2)">'+r+'</text>'});
+  s.pts.forEach(function(p){items+='<circle cx="'+p[0]+'" cy="'+(-p[1])+'" r="'+(span*.008)+'" fill="var(--gps)" fill-opacity=".7"/>'});
+  items+='<circle cx="0" cy="0" r="'+(span*.012)+'" fill="var(--red)"/>';
+  $('#stillplot').innerHTML=plotSVG(items,span,0,0);
+  var st=function(k,v){return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'};
+  $('#stillstats').innerHTML=st('Fixes recorded',s.n)+st('Farthest from average',Math.round(s.maxFt*10)/10+' ft')+st('Typical wander (RMS)',Math.round(s.rmsFt*10)/10+' ft')+st('95% stayed within',Math.round(s.p95Ft*10)/10+' ft')+st('Reported accuracy (avg)','±'+Math.round(s.meanAccFt)+' ft');
+}
+
+/* ---------- results ---------- */
+function stats(){
+  var g=geometry(),diffs=[],worst=0,k;
+  g.edges.forEach(function(e,i){var t=parseFloat(S.tape[i]);if(t>0){var d=Math.abs(Math.round(e.raw*g.f)-t);diffs.push(d);if(d>worst)worst=d}});
+  var gpsOnlyDiffs=[];g.edges.forEach(function(e,i){var t=parseFloat(S.tape[i]);if(t>0)gpsOnlyDiffs.push(Math.abs(Math.round(e.raw)-t))});
+  var mean=function(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null};
+  return{corners:S.pts.length,closed:S.closed,closureFt:S.closure?S.closure.ft:null,tapedEdges:diffs.length,meanAbsOffScaledFt:mean(diffs),worstOffScaledFt:diffs.length?worst:null,meanAbsOffGpsOnlyFt:mean(gpsOnlyDiffs),scaleFactor:g.fromEdge!=null?g.f:null,areaSF:g.area,meanReportedAccFt:mean(S.pts.map(function(p){return accFt(p.acc)})),meanSpreadFt:mean(S.pts.map(function(p){return p.spread*FT}))};
+}
+function renderResults(){
+  var s=stats(),st=function(k,v){return '<div class="stat"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'};
+  var r1=function(x){return x==null?'-':(Math.round(x*10)/10)};
+  $('#sumgrid').innerHTML=st('Corners',s.corners)+st('Closure error',s.closureFt==null?'-':r1(s.closureFt)+' ft')+st('Avg reported accuracy',s.meanReportedAccFt==null?'-':'±'+Math.round(s.meanReportedAccFt)+' ft')+st('Edges taped',s.tapedEdges)+st('Avg off, GPS only',s.meanAbsOffGpsOnlyFt==null?'-':r1(s.meanAbsOffGpsOnlyFt)+' ft')+st('Avg off, scaled to tape',s.meanAbsOffScaledFt==null?'-':r1(s.meanAbsOffScaledFt)+' ft')+st('Worst edge, scaled',s.worstOffScaledFt==null?'-':r1(s.worstOffScaledFt)+' ft')+st('Area',s.areaSF==null?'-':Math.round(s.areaSF).toLocaleString()+' SF');
+  var note='';
+  if(s.meanAbsOffScaledFt!=null)note=s.meanAbsOffScaledFt<=1?'Within the 1 ft rule on average once scaled to your tape. GPS plus two tape checks looks workable on this layout.':'Averaging more than 1 ft off even after scaling. On a layout this small, GPS alone is not precise enough to set wall lengths. That fits the plan: GPS for position and shape, the tape for scale.';
+  $('#sumnote').textContent=note;
+}
+function report(){
+  var g=geometry();
+  return{app:'Take-Off GPS Field Test v1',time:new Date().toISOString(),device:navigator.userAgent,secureContext:window.isSecureContext,
+    settings:{averageSeconds:S.avg,ignoreWorseThanFt:S.gate||'off'},summary:stats(),
+    corners:S.pts.map(function(p,i){return{n:i+1,lat:p.lat,lon:p.lon,reportedAccuracyFt:Math.round(accFt(p.acc)*10)/10,fixesAveraged:p.n,poorFixesSkipped:p.rejected,spreadFt:Math.round(p.spread*FT*10)/10,time:p.t,photo:p.photo&&p.photo.name||null}}),
+    edges:g.edges.map(function(e,k){return{from:e[0]+1,to:e[1]+1,gpsFt:Math.round(e.raw*10)/10,scaledFt:Math.round(e.raw*g.f*10)/10,tapeFt:parseFloat(S.tape[k])||null}}),
+    closure:S.closure,standStill:S.still?{fixes:S.still.n,maxFt:S.still.maxFt,rmsFt:S.still.rmsFt,p95Ft:S.still.p95Ft,meanReportedAccFt:S.still.meanAccFt,time:S.still.t}:null};
+}
+function download(){
+  var b=new Blob([JSON.stringify(report(),null,2)],{type:'application/json'});var a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download='gps-field-test-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);
+}
+function copy(){
+  var t=JSON.stringify(report(),null,2),m=$('#cpmsg');
+  function fb(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();m.textContent=ok?'Copied.':'Copy was blocked. Use Download instead.'}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){m.textContent='Copied.'},fb);else fb();
+}
+var resetArmed=false;
+function reset(){
+  var m=$('#resetmsg'),b=$('#reset');
+  if(!resetArmed){resetArmed=true;b.textContent='Tap again to clear everything';m.textContent='';setTimeout(function(){resetArmed=false;b.textContent='Clear this test'},4000);return}
+  resetArmed=false;b.textContent='Clear this test';S.pts=[];S.closed=false;S.closure=null;S.tape={};S.still=null;S.photoN=0;thumbs={};save();renderAll();renderStill();updBar();m.textContent='Cleared.';
+}
+
+/* ---------- photos ---------- */
+$('#cam').addEventListener('change',function(ev){
+  var f=ev.target.files&&ev.target.files[0];if(!f||photoFor==null)return;
+  var p=S.pts[photoFor];S.photoN++;
+  p.photo={name:'Section 1 - Corner '+(photoFor+1)+' - Photo '+String(S.photoN).padStart(3,'0')+' [TEST]'};
+  try{thumbs[p.id]=URL.createObjectURL(f)}catch(e){}
+  save();renderPts();ev.target.value='';photoFor=null;
+});
+
+/* ---------- wiring ---------- */
+function chips(id,list,cur,fn){
+  var el=$(id);el.innerHTML=list.map(function(o){return '<button class="chip '+(o.v===cur?'on':'')+'" data-v="'+o.v+'">'+o.l+'</button>'}).join('');
+  el.onclick=function(e){var b=e.target.closest('[data-v]');if(!b)return;fn(+b.dataset.v);chips(id,list,+b.dataset.v,fn)};
+}
+function showTab(t){
+  S.tab=t;['walk','still','results'].forEach(function(k){$('#tab-'+k).hidden=k!==t});
+  document.querySelectorAll('#tabs .chip').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t)});
+  updBar();if(t==='results')renderResults();if(t==='still')renderStill();
+}
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-tab]');if(t){showTab(t.dataset.tab);return}
+  var p=e.target.closest('[data-photo]');if(p){photoFor=+p.dataset.photo;$('#cam').click()}
+});
+document.addEventListener('input',function(e){
+  var t=e.target;if(t.dataset&&t.dataset.tape!=null){S.tape[t.dataset.tape]=t.value;save();paintEdges();renderResults()}
+});
+$('#gpsbtn').onclick=function(){watchId==null?startGPS():stopGPS()};
+$('#corner').onclick=markCorner;$('#close').onclick=closeShape;$('#undo').onclick=undo;
+$('#stillbtn').onclick=runStill;$('#dl').onclick=download;$('#cp').onclick=copy;$('#reset').onclick=reset;
+
+load();
+if(!window.isSecureContext)$('#secure').hidden=false;
+chips('#avgchips',[{v:1,l:'1 s'},{v:2,l:'2 s'},{v:3,l:'3 s'},{v:5,l:'5 s'}],S.avg,function(v){S.avg=v;save()});
+chips('#gatechips',[{v:15,l:'15 ft'},{v:30,l:'30 ft'},{v:50,l:'50 ft'},{v:0,l:'Nothing'}],S.gate,function(v){S.gate=v;save()});
+setInterval(function(){if(watchId!=null&&live)renderStatus()},1000);
+renderStatus();renderAll();renderStill();updBar();
+window.__S=S;window.__geometry=geometry;
+})();
+</script>
+</body>
+</html>
